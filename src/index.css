@@ -1,0 +1,12 @@
+/* src/index.css */
+
+/* 1. SOLO este import para Tailwind v4 */
+@import "tailwindcss";
+
+/* 2. Custom variant para que dark: funcione con la clase .dark */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* 3. Aquí ya puedes poner tus estilos globales si tienes */
+body {
+  @apply antialiased;
+}
