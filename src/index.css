@@ -10,3 +10,53 @@
 body {
   @apply antialiased;
 }
+
+
+/* ===========================
+   Scrollbar global ZaHub 🍕
+   =========================== */
+
+:root {
+  --scrollbar-track: #020617;   /* slate-950 */
+  --scrollbar-thumb: #f97316;   /* orange-500 */
+  --scrollbar-thumb-hover: #fb923c; /* orange-400 */
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* WebKit (Chrome, Edge, Safari) */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    var(--scrollbar-thumb),
+    #ea580c
+  );
+  border-radius: 9999px;
+  border: 2px solid var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    var(--scrollbar-thumb-hover),
+    var(--scrollbar-thumb)
+  );
+}
+
+/* Opcional: esquinas (cuando se cruzan scrolls) */
+*::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
+}

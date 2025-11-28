@@ -1,3 +1,4 @@
+// src/admin/pages/PedidosPage.jsx
 import { useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
 import {
@@ -8,6 +9,8 @@ import {
   Filter,
   ChevronDown,
   PlusCircle,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 
@@ -22,6 +25,7 @@ const ESTADOS = [
 ];
 
 const ESTADOS_FILTRO = ['TODOS', ...ESTADOS];
+const ITEMS_PER_PAGE = 9; // 3 x 4
 
 function getEstadoClasses(estado) {
   switch (estado) {
@@ -29,15 +33,15 @@ function getEstadoClasses(estado) {
       return 'bg-yellow-100 dark:bg-yellow-500/10 dark:text-yellow-400';
     case 'PREPARANDO':
     case 'HORNEANDO':
-      return 'bg-orange-100 dark:bg-orange-500/25 dark:text-orange-500';
+      return 'bg-orange-100 dark:bg-orange-500/25 dark:text-orange-400';
     case 'LISTO':
-      return 'bg-blue-100 dark:bg-blue-500/25 dark:text-blue-400';
+      return 'bg-blue-100 dark:bg-blue-500/25 dark:text-blue-300';
     case 'EN_CAMINO':
-      return 'bg-indigo-100 dark:bg-indigo-500/25 dark:text-indigo-500';
+      return 'bg-indigo-100 dark:bg-indigo-500/25 dark:text-indigo-400';
     case 'ENTREGADO':
-      return 'bg-green-100 dark:bg-green-500/25 dark:text-green-500';
+      return 'bg-green-100 dark:bg-green-500/25 dark:text-emerald-400';
     case 'CANCELADO':
-      return 'bg-red-100 dark:bg-red-500/25 dark:text-red-600';
+      return 'bg-red-100 dark:bg-red-500/25 dark:text-red-400';
     default:
       return 'bg-slate-100 dark:bg-slate-500/25 dark:text-slate-800';
   }
@@ -49,6 +53,7 @@ export default function PedidosPage() {
   const [loading, setLoading] = useState(false);
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
   const [errorCarga, setErrorCarga] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchPedidos = async () => {
     setLoading(true);
@@ -90,8 +95,12 @@ export default function PedidosPage() {
     fetchPedidos();
   }, [authLoading, userProfile?.id]);
 
+  // Cuando cambie el filtro o la lista, volvemos a la página 1
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filtroEstado, pedidos.length]);
+
   const cambiarEstado = async (pedidoId, nuevoEstado) => {
-    // UI optimista
     setPedidos((prev) =>
       prev.map((p) => (p.id === pedidoId ? { ...p, estado: nuevoEstado } : p))
     );
@@ -109,7 +118,7 @@ export default function PedidosPage() {
   };
 
   const crearPedidoDePrueba = async () => {
-    const clienteId = '11c68e3b-cf7d-417a-ae79-fe6d39f3bc84'; // cliente de prueba
+    const clienteId = '11c68e3b-cf7d-417a-ae79-fe6d39f3bc84';
 
     const { data, error } = await supabase
       .from('pedidos')
@@ -132,14 +141,34 @@ export default function PedidosPage() {
     }
   };
 
+  // ==== Filtro + paginación ====
   const pedidosFiltrados = pedidos.filter((p) =>
     filtroEstado === 'TODOS' ? true : p.estado === filtroEstado
   );
 
-  // Estados de auth
+  const totalPedidos = pedidosFiltrados.length;
+  const totalPages = Math.max(1, Math.ceil(totalPedidos / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+
+  const startIndex = (safePage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const pedidosPagina = pedidosFiltrados.slice(startIndex, endIndex);
+
+  const handlePrev = () => {
+    setCurrentPage((p) => Math.max(1, p - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentPage((p) => Math.min(totalPages, p + 1));
+  };
+
+  const handleGoto = (page) => {
+    setCurrentPage(page);
+  };
+
   if (authLoading) {
     return (
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <p className="text-sm text-slate-400">
         Preparando tu panel de administración...
       </p>
     );
@@ -154,35 +183,41 @@ export default function PedidosPage() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header (alineado con Ingredientes) */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex items-center gap-2">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-md bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 flex items-center justify-center">
             <DollarSign className="w-4 h-4" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-              Pedidos
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-semibold text-slate-100">
+                Pedidos
+              </h1>
+              <span className="inline-flex items-center gap-1 px-2 py-[2px] rounded-full bg-emerald-500/15 text-[11px] text-emerald-300 border border-emerald-500/40">
+                <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                En vivo
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
               Gestiona los pedidos en tiempo real desde este panel.
             </p>
           </div>
         </div>
 
         {/* Acciones / filtro */}
-        <div className="flex items-end gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <button
             onClick={crearPedidoDePrueba}
-            className="inline-flex items-center gap-2 bg-emerald-600 text-white text-sm px-4 py-2 rounded-md hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 active:scale-[0.98] transition"
+            className="inline-flex items-center gap-2 bg-emerald-600 text-white text-xs sm:text-sm px-4 py-2 rounded-md hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 active:scale-[0.98] transition whitespace-nowrap"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Crear pedido de prueba</span>
           </button>
 
-          <div className="relative">
-            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 mb-1">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2 text-[11px] text-slate-300 mb-1">
               <Filter className="w-3 h-3" />
               <span>Estado</span>
             </div>
@@ -190,7 +225,7 @@ export default function PedidosPage() {
               <select
                 value={filtroEstado}
                 onChange={(e) => setFiltroEstado(e.target.value)}
-                className="appearance-none border border-slate-300 dark:border-slate-700 rounded-md text-sm pl-3 pr-8 py-1.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-900/5 focus:border-slate-400 dark:focus:border-slate-500 transition"
+                className="appearance-none border border-slate-700 rounded-md text-xs sm:text-sm pl-3 pr-8 py-1.5 bg-slate-900 text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/60"
               >
                 {ESTADOS_FILTRO.map((est) => (
                   <option key={est} value={est}>
@@ -198,7 +233,7 @@ export default function PedidosPage() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 text-slate-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
         </div>
@@ -206,96 +241,168 @@ export default function PedidosPage() {
 
       {/* Estados de carga / error */}
       {loading && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Cargando pedidos...
-        </p>
+        <p className="text-sm text-slate-400">Cargando pedidos...</p>
       )}
 
       {!loading && errorCarga && (
         <p className="text-sm text-red-500">{errorCarga}</p>
       )}
 
-      {!loading && !errorCarga && pedidosFiltrados.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+      {!loading && !errorCarga && totalPedidos === 0 && (
+        <p className="text-sm text-slate-400">
           No hay pedidos para el filtro seleccionado.
         </p>
       )}
 
-      {/* Listado (cards estilo ZaHub Admin) */}
-      {!loading && !errorCarga && pedidosFiltrados.length > 0 && (
-        <div className="space-y-3">
-          {pedidosFiltrados.map((p) => (
-            <div
-              key={p.id}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 transition hover:-translate-y-0.5 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500 dark:hover:bg-slate-800"
-            >
-              <div className="space-y-2">
-                <p className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                  <Clock className="w-4 h-4" />
-                  <span>#{p.id.slice(0, 8)}</span>
-                  <span>·</span>
-                  <span>{new Date(p.created_at).toLocaleString()}</span>
-                </p>
-
-                <p className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-100">
-                  <User className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                  <span>
-                    Cliente:{' '}
-                    <span className="font-semibold">
-                      {p.usuarios_app?.nombre ?? 'Desconocido'}
+      {/* Grid de cards + paginación */}
+      {!loading && !errorCarga && totalPedidos > 0 && (
+        <>
+          {/* GRID 3x4 responsive */}
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+            {pedidosPagina.map((p) => (
+              <div
+                key={p.id}
+                className="bg-slate-900/70 border border-slate-800 rounded-xl p-4 flex flex-col justify-between gap-3 transition hover:border-orange-500/40 hover:shadow-[0_0_0_1px_rgba(249,115,22,0.3)]"
+              >
+                <div className="space-y-2">
+                  <p className="flex items-center justify-between text-[11px] text-slate-400">
+                    <span className="inline-flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      <span>#{p.id.slice(0, 8)}</span>
                     </span>
-                  </span>
-                </p>
+                    <span>
+                      {new Date(p.created_at).toLocaleString('es-CO', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </p>
 
-                <p className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                  <DollarSign className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                  <span>Total: ${p.total}</span>
-                </p>
+                  <p className="flex items-center gap-2 text-sm font-medium text-slate-100">
+                    <User className="w-4 h-4 text-slate-400" />
+                    <span className="truncate">
+                      Cliente:{' '}
+                      <span className="font-semibold">
+                        {p.usuarios_app?.nombre ?? 'Desconocido'}
+                      </span>
+                    </span>
+                  </p>
 
-                <p className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                  <span
-                    className={
-                      'inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold ' +
-                      getEstadoClasses(p.estado)
-                    }
-                  >
-                    {p.estado}
-                  </span>
-                  <span className="text-slate-400 dark:text-slate-500">·</span>
-                  <span className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300">
-                    <span className="uppercase tracking-wide">
+                  <p className="flex items-center gap-2 text-sm text-slate-200">
+                    <DollarSign className="w-4 h-4 text-slate-400" />
+                    <span>Total: ${p.total}</span>
+                  </p>
+
+                  <p className="flex items-center gap-2 text-sm text-slate-200">
+                    <span
+                      className={
+                        'inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold ' +
+                        getEstadoClasses(p.estado)
+                      }
+                    >
+                      {p.estado}
+                    </span>
+                    <span className="text-slate-500">·</span>
+                    <span className="text-[11px] uppercase tracking-wide text-slate-300">
                       Pago: {p.metodo_pago ?? 'N/A'}
                     </span>
-                  </span>
-                </p>
+                  </p>
 
-                <p className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                  <MapPin className="w-4 h-4" />
-                  <span className="line-clamp-1">
-                    Dirección: {p.direccion_entrega}
+                  <p className="flex items-center gap-2 text-[11px] text-slate-400">
+                    <MapPin className="w-4 h-4" />
+                    <span className="line-clamp-2">
+                      Dirección: {p.direccion_entrega}
+                    </span>
+                  </p>
+                </div>
+
+                {/* Selector de estado */}
+                <div className="flex items-center justify-between pt-2 border-t border-slate-800 mt-1">
+                  <span className="text-[11px] text-slate-500">
+                    Cambiar estado
                   </span>
-                </p>
+                  <select
+                    value={p.estado}
+                    onChange={(e) => cambiarEstado(p.id, e.target.value)}
+                    className="border border-slate-700 rounded-md px-3 py-1.5 text-xs bg-slate-950 text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/60 cursor-pointer"
+                  >
+                    {ESTADOS.map((est) => (
+                      <option key={est} value={est}>
+                        {est}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
+            ))}
+          </div>
 
-              <div className="flex flex-col items-start sm:items-end gap-1">
-                <span className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                  Cambiar estado
-                </span>
-                <select
-                  value={p.estado}
-                  onChange={(e) => cambiarEstado(p.id, e.target.value)}
-                  className="border border-slate-300 dark:border-slate-700 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-900/5 focus:border-slate-400 dark:focus:border-slate-500 transition cursor-pointer"
+          {/* PAGINACIÓN CREATIVA */}
+          {totalPages > 1 && (
+            <div className="mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs text-slate-400">
+              <p>
+                Mostrando{' '}
+                <span className="text-slate-200">
+                  {startIndex + 1}–{Math.min(endIndex, totalPedidos)}
+                </span>{' '}
+                de <span className="text-slate-200">{totalPedidos}</span>{' '}
+                pedidos
+              </p>
+
+              <div className="flex items-center gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={handlePrev}
+                  disabled={safePage === 1}
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-[11px] transition ${
+                    safePage === 1
+                      ? 'border-slate-700 text-slate-600 cursor-not-allowed'
+                      : 'border-slate-600 text-slate-200 hover:border-orange-500 hover:text-orange-300'
+                  }`}
                 >
-                  {ESTADOS.map((est) => (
-                    <option key={est} value={est}>
-                      {est}
-                    </option>
-                  ))}
-                </select>
+                  <ChevronLeft className="w-3 h-3" />
+                  <span>Anterior</span>
+                </button>
+
+                {/* Píldoras de páginas */}
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => handleGoto(page)}
+                        className={`w-7 h-7 rounded-full text-[11px] flex items-center justify-center border transition ${
+                          page === safePage
+                            ? 'bg-orange-500 border-orange-500 text-white shadow-[0_0_0_1px_rgba(248,250,252,0.2)]'
+                            : 'border-slate-700 text-slate-300 hover:border-orange-500 hover:text-orange-300'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={safePage === totalPages}
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-[11px] transition ${
+                    safePage === totalPages
+                      ? 'border-slate-700 text-slate-600 cursor-not-allowed'
+                      : 'border-slate-600 text-slate-200 hover:border-orange-500 hover:text-orange-300'
+                  }`}
+                >
+                  <span>Siguiente</span>
+                  <ChevronRight className="w-3 h-3" />
+                </button>
               </div>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   );

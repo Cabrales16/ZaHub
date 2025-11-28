@@ -1,8 +1,18 @@
+// src/modules/admin/PizzasPage.jsx
 import { useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
-import { Pizza, PlusCircle, ToggleLeft, ToggleRight, Pencil } from 'lucide-react';
+import {
+  Pizza,
+  PlusCircle,
+  ToggleLeft,
+  ToggleRight,
+  Pencil,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 
 const TAMANOS = ['PERSONAL', 'MEDIANA', 'FAMILIAR'];
+const ITEMS_PER_PAGE = 10;
 
 export default function PizzasPage() {
   const [pizzas, setPizzas] = useState([]);
@@ -13,6 +23,8 @@ export default function PizzasPage() {
   const [descripcion, setDescripcion] = useState('');
   const [tamano, setTamano] = useState('MEDIANA');
   const [precioBase, setPrecioBase] = useState('');
+
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchPizzas = async () => {
     setLoading(true);
@@ -37,6 +49,11 @@ export default function PizzasPage() {
   useEffect(() => {
     fetchPizzas();
   }, []);
+
+  // reset página cuando cambie la lista
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [pizzas.length]);
 
   const handleCrear = async (e) => {
     e.preventDefault();
@@ -135,22 +152,46 @@ export default function PizzasPage() {
     fetchPizzas();
   };
 
+  // ==== paginación ====
+  const totalPizzas = pizzas.length;
+  const totalPages = Math.max(1, Math.ceil(totalPizzas / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+
+  const startIndex = (safePage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const pizzasPagina = pizzas.slice(startIndex, endIndex);
+
+  const handlePrev = () => {
+    setCurrentPage((p) => Math.max(1, p - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentPage((p) => Math.min(totalPages, p + 1));
+  };
+
+  const handleGoto = (page) => {
+    setCurrentPage(page);
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div className="h-9 w-9 rounded-md bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 flex items-center justify-center">
-            <Pizza className="w-4 h-4" />
-          </div>
-          <div>
+      <div className="flex items-center gap-3">
+        <div className="h-9 w-9 rounded-md bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 flex items-center justify-center">
+          <Pizza className="w-4 h-4" />
+        </div>
+        <div>
+          <div className="flex items-center gap-2">
             <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
               Pizzas
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Gestiona el catálogo de pizzas base de ZaHub.
-            </p>
+            <span className="inline-flex items-center px-2 py-[2px] rounded-full bg-orange-500/10 text-[11px] text-orange-500 dark:text-orange-300 border border-orange-500/40">
+              Menú base
+            </span>
           </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Gestiona el catálogo de pizzas base de ZaHub.
+          </p>
         </div>
       </div>
 
@@ -240,91 +281,157 @@ export default function PizzasPage() {
         <p className="text-sm text-red-500">{errorMsg}</p>
       )}
 
-      {!loading && !errorMsg && pizzas.length === 0 && (
+      {!loading && !errorMsg && totalPizzas === 0 && (
         <p className="text-sm text-slate-500 dark:text-slate-400">
           No hay pizzas registradas todavía.
         </p>
       )}
 
-      {/* Listado */}
-      {!loading && !errorMsg && pizzas.length > 0 && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm overflow-hidden">
-          <table className="w-full text-sm text-slate-800 dark:text-slate-100">
-            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
-              <tr>
-                <th className="text-left px-4 py-2 border-b border-slate-200 dark:border-slate-700">
-                  Nombre
-                </th>
-                <th className="text-left px-4 py-2 border-b border-slate-200 dark:border-slate-700">
-                  Tamaño
-                </th>
-                <th className="text-left px-4 py-2 border-b border-slate-200 dark:border-slate-700">
-                  Descripción
-                </th>
-                <th className="text-right px-4 py-2 border-b border-slate-200 dark:border-slate-700">
-                  Precio base
-                </th>
-                <th className="text-center px-4 py-2 border-b border-slate-200 dark:border-slate-700">
-                  Estado
-                </th>
-                <th className="text-right px-4 py-2 border-b border-slate-200 dark:border-slate-700">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {pizzas.map((pz) => (
-                <tr
-                  key={pz.id}
-                  className="hover:bg-slate-50 dark:hover:bg-slate-800 transition"
-                >
-                  <td className="px-4 py-2 border-b border-slate-200 dark:border-slate-800">
-                    {pz.nombre}
-                  </td>
-                  <td className="px-4 py-2 border-b border-slate-200 dark:border-slate-800">
-                    {pz.tamano ?? '—'}
-                  </td>
-                  <td className="px-4 py-2 border-b border-slate-200 dark:border-slate-800">
-                    <span className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">
-                      {pz.descripcion || 'Sin descripción'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 text-right">
-                    ${pz.precio_base ?? 0}
-                  </td>
-                  <td className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 text-center">
-                    <button
-                      type="button"
-                      onClick={() => toggleActiva(pz)}
-                      className="inline-flex items-center gap-1 text-xs text-slate-700 dark:text-slate-200"
-                    >
-                      {pz.activa ? (
-                        <>
-                          <ToggleRight className="w-4 h-4 text-emerald-500" />
-                          <span>Activa</span>
-                        </>
-                      ) : (
-                        <>
-                          <ToggleLeft className="w-4 h-4 text-slate-400" />
-                          <span>Inactiva</span>
-                        </>
-                      )}
-                    </button>
-                  </td>
-                  <td className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 text-right">
-                    <button
-                      onClick={() => handleEditarRapido(pz)}
-                      className="inline-flex items-center gap-1 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-3 py-1 rounded-md text-slate-800 dark:text-slate-100 transition"
-                    >
-                      <Pencil className="w-3 h-3" />
-                      <span>Editar</span>
-                    </button>
-                  </td>
+      {/* Listado + paginación */}
+      {!loading && !errorMsg && totalPizzas > 0 && (
+        <>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm overflow-hidden">
+            <table className="w-full text-sm text-slate-800 dark:text-slate-100">
+              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+                <tr>
+                  <th className="text-left px-4 py-2 border-b border-slate-200 dark:border-slate-700">
+                    Nombre
+                  </th>
+                  <th className="text-left px-4 py-2 border-b border-slate-200 dark:border-slate-700">
+                    Tamaño
+                  </th>
+                  <th className="text-left px-4 py-2 border-b border-slate-200 dark:border-slate-700">
+                    Descripción
+                  </th>
+                  <th className="text-right px-4 py-2 border-b border-slate-200 dark:border-slate-700">
+                    Precio base
+                  </th>
+                  <th className="text-center px-4 py-2 border-b border-slate-200 dark:border-slate-700">
+                    Estado
+                  </th>
+                  <th className="text-right px-4 py-2 border-b border-slate-200 dark:border-slate-700">
+                    Acciones
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {pizzasPagina.map((pz) => (
+                  <tr
+                    key={pz.id}
+                    className="hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                  >
+                    <td className="px-4 py-2 border-b border-slate-200 dark:border-slate-800">
+                      {pz.nombre}
+                    </td>
+                    <td className="px-4 py-2 border-b border-slate-200 dark:border-slate-800">
+                      {pz.tamano ?? '—'}
+                    </td>
+                    <td className="px-4 py-2 border-b border-slate-200 dark:border-slate-800">
+                      <span className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">
+                        {pz.descripcion || 'Sin descripción'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 text-right">
+                      ${pz.precio_base ?? 0}
+                    </td>
+                    <td className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 text-center">
+                      <button
+                        type="button"
+                        onClick={() => toggleActiva(pz)}
+                        className="inline-flex items-center gap-1 text-xs text-slate-700 dark:text-slate-200"
+                      >
+                        {pz.activa ? (
+                          <>
+                            <ToggleRight className="w-4 h-4 text-emerald-500" />
+                            <span>Activa</span>
+                          </>
+                        ) : (
+                          <>
+                            <ToggleLeft className="w-4 h-4 text-slate-400" />
+                            <span>Inactiva</span>
+                          </>
+                        )}
+                      </button>
+                    </td>
+                    <td className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 text-right">
+                      <button
+                        onClick={() => handleEditarRapido(pz)}
+                        className="inline-flex items-center gap-1 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-3 py-1 rounded-md text-slate-800 dark:text-slate-100 transition"
+                      >
+                        <Pencil className="w-3 h-3" />
+                        <span>Editar</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs text-slate-400">
+              <p>
+                Mostrando{' '}
+                <span className="text-slate-200">
+                  {startIndex + 1}–
+                  {Math.min(endIndex, totalPizzas)}
+                </span>{' '}
+                de{' '}
+                <span className="text-slate-200">{totalPizzas}</span>{' '}
+                pizzas
+              </p>
+
+              <div className="flex items-center gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={handlePrev}
+                  disabled={safePage === 1}
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-[11px] transition ${
+                    safePage === 1
+                      ? 'border-slate-700 text-slate-600 cursor-not-allowed'
+                      : 'border-slate-600 text-slate-200 hover:border-orange-500 hover:text-orange-300'
+                  }`}
+                >
+                  <ChevronLeft className="w-3 h-3" />
+                  <span>Anterior</span>
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => handleGoto(page)}
+                        className={`w-7 h-7 rounded-full text-[11px] flex items-center justify-center border transition ${
+                          page === safePage
+                            ? 'bg-orange-500 border-orange-500 text-white shadow-[0_0_0_1px_rgba(248,250,252,0.2)]'
+                            : 'border-slate-700 text-slate-300 hover:border-orange-500 hover:text-orange-300'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={safePage === totalPages}
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-[11px] transition ${
+                    safePage === totalPages
+                      ? 'border-slate-700 text-slate-600 cursor-not-allowed'
+                      : 'border-slate-600 text-slate-200 hover:border-orange-500 hover:text-orange-300'
+                  }`}
+                >
+                  <span>Siguiente</span>
+                  <ChevronRight className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
