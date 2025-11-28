@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../auth/AuthContext';
-import { ClipboardList, Settings, LogOut } from 'lucide-react';
+import { ClipboardList, Settings, LogOut, Pizza } from 'lucide-react';
 
 export default function AdminLayout() {
   const { userProfile } = useAuth();
@@ -48,6 +48,17 @@ export default function AdminLayout() {
           <NavLink to="/admin/pedidos" className={linkClasses}>
             <ClipboardList className="w-4 h-4" />
             <span>Pedidos</span>
+          </NavLink>
+
+          <NavLink to="/admin/ingredientes" className={linkClasses}>
+            <ClipboardList className="w-4 h-4" />
+            <span>Ingredientes</span>
+          </NavLink>
+
+          {/* nuevo link Pizzas */}
+          <NavLink to="/admin/pizzas" className={linkClasses}>
+            <Pizza className="w-4 h-4" />
+            <span>Pizzas</span>
           </NavLink>
         </nav>
 

@@ -7,8 +7,9 @@ import {
   Clock,
   Filter,
   ChevronDown,
+  PlusCircle,
 } from 'lucide-react';
-import { useAuth } from '../auth/AuthContext'; // 👈 importante
+import { useAuth } from '../auth/AuthContext';
 
 const ESTADOS = [
   'PENDIENTE',
@@ -42,16 +43,14 @@ function getEstadoClasses(estado) {
   }
 }
 
-
 export default function PedidosPage() {
-  const { userProfile, loading: authLoading } = useAuth(); // 👈 leemos auth
+  const { userProfile, loading: authLoading } = useAuth();
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
   const [errorCarga, setErrorCarga] = useState('');
 
   const fetchPedidos = async () => {
-    console.log('🔄 fetchPedidos llamado');
     setLoading(true);
     setErrorCarga('');
 
@@ -74,7 +73,6 @@ export default function PedidosPage() {
         setErrorCarga('No se pudieron cargar los pedidos.');
         setPedidos([]);
       } else {
-        console.log('✅ Pedidos cargados:', data);
         setPedidos(data || []);
       }
     } catch (err) {
@@ -86,43 +84,32 @@ export default function PedidosPage() {
     }
   };
 
-  // 👇 Solo cargamos pedidos cuando:
-  // - Auth YA terminó (authLoading === false)
-  // - Y SÍ tenemos userProfile
   useEffect(() => {
-    if (authLoading) return;        // todavía se está resolviendo la sesión
-    if (!userProfile) return;       // sin usuario no pedimos pedidos
-
+    if (authLoading) return;
+    if (!userProfile) return;
     fetchPedidos();
-  }, [authLoading, userProfile?.id]); // se recarga si cambia de usuario
+  }, [authLoading, userProfile?.id]);
 
   const cambiarEstado = async (pedidoId, nuevoEstado) => {
-    // 1) UI optimista: actualizamos el estado en memoria de una vez
+    // UI optimista
     setPedidos((prev) =>
-      prev.map((p) =>
-        p.id === pedidoId ? { ...p, estado: nuevoEstado } : p
-      )
+      prev.map((p) => (p.id === pedidoId ? { ...p, estado: nuevoEstado } : p))
     );
-  
-    // 2) Enviamos el cambio a Supabase
+
     const { error } = await supabase
       .from('pedidos')
       .update({ estado: nuevoEstado })
       .eq('id', pedidoId);
-  
-    // 3) Si falla, revertimos el cambio y avisamos
+
     if (error) {
       console.error('Error cambiando estado:', error);
       alert('No se pudo cambiar el estado. Se revertirá.');
-    
-      // Revertir: volver a pedir los pedidos
       fetchPedidos();
     }
   };
 
-
   const crearPedidoDePrueba = async () => {
-    const clienteId = '11c68e3b-cf7d-417a-ae79-fe6d39f3bc84';
+    const clienteId = '11c68e3b-cf7d-417a-ae79-fe6d39f3bc84'; // cliente de prueba
 
     const { data, error } = await supabase
       .from('pedidos')
@@ -141,8 +128,7 @@ export default function PedidosPage() {
       console.error('Error creando pedido:', error);
       alert('Error al crear pedido.');
     } else {
-      console.log('Pedido creado:', data);
-      fetchPedidos();
+      setPedidos((prev) => [data, ...prev]);
     }
   };
 
@@ -150,7 +136,7 @@ export default function PedidosPage() {
     filtroEstado === 'TODOS' ? true : p.estado === filtroEstado
   );
 
-  // 👉 Mientras el Auth está cargando, mostramos un mensaje aparte
+  // Estados de auth
   if (authLoading) {
     return (
       <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -159,7 +145,6 @@ export default function PedidosPage() {
     );
   }
 
-  // 👉 Si no hay usuario (algo raro pasó), mostramos aviso
   if (!userProfile) {
     return (
       <p className="text-sm text-red-500">
@@ -170,7 +155,7 @@ export default function PedidosPage() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
+      {/* Header (alineado con Ingredientes) */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-2">
           <div className="h-9 w-9 rounded-md bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 flex items-center justify-center">
@@ -186,13 +171,14 @@ export default function PedidosPage() {
           </div>
         </div>
 
+        {/* Acciones / filtro */}
         <div className="flex items-end gap-3">
           <button
             onClick={crearPedidoDePrueba}
             className="inline-flex items-center gap-2 bg-emerald-600 text-white text-sm px-4 py-2 rounded-md hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 active:scale-[0.98] transition"
           >
-            <span className="text-base">＋</span>
-            Crear pedido de prueba
+            <PlusCircle className="w-4 h-4" />
+            <span>Crear pedido de prueba</span>
           </button>
 
           <div className="relative">
@@ -235,7 +221,7 @@ export default function PedidosPage() {
         </p>
       )}
 
-      {/* Listado de pedidos */}
+      {/* Listado (cards estilo ZaHub Admin) */}
       {!loading && !errorCarga && pedidosFiltrados.length > 0 && (
         <div className="space-y-3">
           {pedidosFiltrados.map((p) => (

@@ -9,6 +9,8 @@ import PedidosPage from "./modules/admin/PedidosPage";
 import { ThemeProvider } from "./context/ThemeContext";
 import ProtectedRoute from "./modules/auth/ProtectedRoute";
 import ConfiguracionPage from "./modules/admin/ConfiguracionPage";
+import IngredientesPage from "./modules/admin/IngredientesPage";
+import PizzasPage from "./modules/admin/PizzasPage";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -28,6 +30,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             >
               <Route path="pedidos" element={<PedidosPage />} />
               <Route path="configuracion" element={<ConfiguracionPage />} />
+              <Route path="ingredientes" element={<IngredientesPage />} />
+              <Route path="pizzas" element={<PizzasPage />} />
             </Route>
 
             {/* Redirección por defecto */}
