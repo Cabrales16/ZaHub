@@ -26,7 +26,7 @@ export default function LoginPage() {
       return;
     }
 
-    navigate('/admin/pedidos');
+    navigate('/admin/dashboard', { replace: true });
   };
 
   return (

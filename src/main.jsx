@@ -35,7 +35,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               }
             >
               {/* /admin → Dashboard */}
-              <Route index element={<DashboardPage />} />
+              <Route index element={<Navigate to="dashboard" replace />} />
 
               {/* /admin/dashboard → mismo dashboard */}
               <Route path="dashboard" element={<DashboardPage />} />
