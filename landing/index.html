@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZaHub · Demo</title>
+  <meta name="description" content="Demo interactiva de ZaHub: app para clientes y panel de administración de una pizzería.">
+  <link rel="icon" href="logo.png">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at 20% 0%, #7c2d12 0, #020617 55%); color: #e2e8f0; display: flex; justify-content: center; padding: 32px 16px; }
+    main { width: 100%; max-width: 860px; }
+    header { text-align: center; margin-bottom: 28px; }
+    header img { width: 96px; height: 96px; object-fit: contain; }
+    h1 { margin: 8px 0 4px; font-size: 40px; color: #fff; }
+    .tag { color: #fb923c; font-weight: 600; }
+    p.lead { color: #94a3b8; max-width: 620px; margin: 10px auto 0; line-height: 1.5; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 28px 0; }
+    .card { background: rgba(15, 23, 42, .85); border: 1px solid #1e293b; border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 10px; }
+    .card h2 { margin: 0; color: #fff; font-size: 22px; }
+    .card p { margin: 0; color: #94a3b8; font-size: 14px; line-height: 1.5; }
+    .card a.btn { margin-top: auto; text-align: center; text-decoration: none; background: #ef4444; color: #fff; padding: 11px; border-radius: 999px; font-weight: 600; }
+    .card a.btn.alt { background: #f97316; }
+    .card a.btn:hover { filter: brightness(1.1); }
+    .tip { background: rgba(251, 191, 36, .1); border: 1px solid rgba(251, 191, 36, .4); color: #fde68a; border-radius: 12px; padding: 14px 16px; font-size: 14px; line-height: 1.6; }
+    code { background: rgba(255,255,255,.08); padding: 1px 6px; border-radius: 6px; }
+    footer { text-align: center; margin-top: 28px; font-size: 13px; color: #64748b; }
+    footer a { color: #fb923c; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <img src="logo.png" alt="ZaHub">
+      <h1>ZaHub</h1>
+      <div class="tag">El algoritmo del antojo perfecto 🍕</div>
+      <p class="lead">Sistema para una pizzería: una app para que los clientes pidan y personalicen sus pizzas, y un panel para que el equipo gestione pedidos, menú, ingredientes y usuarios.</p>
+    </header>
+
+    <section class="cards">
+      <article class="card">
+        <h2>📱 App del cliente</h2>
+        <p>Explora promociones y el menú, arma tu propia Za, agrega al carrito, confirma tu pedido y sigue su estado.</p>
+        <a class="btn" href="cliente/">Abrir la app</a>
+      </article>
+      <article class="card">
+        <h2>🧑‍🍳 Panel de administración</h2>
+        <p>Dashboard, pedidos con cambio de estado e historial, catálogo de pizzas, ingredientes y gestión de usuarios y roles.</p>
+        <a class="btn alt" href="admin/">Abrir el panel</a>
+      </article>
+    </section>
+
+    <div class="tip">
+      <strong>💡 Cómo probarlo:</strong> abre las dos en pestañas distintas. Las dos comparten los mismos datos
+      (se guardan en tu navegador): haz un pedido en la app y cámbiale el estado desde el panel; verás el cambio en «Pedidos» de la app.<br>
+      Cuentas de prueba (clave <code>demo1234</code>): <code>cliente@zahub.demo</code>, <code>admin@zahub.demo</code>,
+      <code>cajero@zahub.demo</code>, <code>cocina@zahub.demo</code>. Hay botones de acceso rápido en cada login.
+    </div>
+
+    <footer>
+      Demo sin backend · <a href="https://github.com/Cabrales16/ZaHub">Código en GitHub</a>
+    </footer>
+  </main>
+</body>
+</html>

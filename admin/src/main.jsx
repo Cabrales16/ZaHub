@@ -1,0 +1,64 @@
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter, HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import "./index.css";
+
+import { AuthProvider } from "./modules/auth/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
+
+import LoginPage from "./modules/auth/LoginPage";
+import ProtectedRoute from "./modules/auth/ProtectedRoute";
+
+import AdminLayout from "./modules/admin/AdminLayout";
+import DashboardPage from "./modules/admin/DashboardPage";
+import PedidosPage from "./modules/admin/PedidosPage";
+import ConfiguracionPage from "./modules/admin/ConfiguracionPage";
+import IngredientesPage from "./modules/admin/IngredientesPage";
+import PizzasPage from "./modules/admin/PizzasPage";
+import UsuariosPage from "./modules/admin/UsuariosPage";
+import PedidoDetallePage from "./modules/admin/pages/PedidoDetallePage";
+import DemoBanner from "./components/DemoBanner";
+import { isDemo } from "./supabaseClient";
+
+// GitHub Pages no redirige rutas del SPA: en la demo se usa HashRouter (#/admin/...).
+const Router = isDemo ? HashRouter : BrowserRouter;
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+
+            <Route
+              path="/admin/*"
+              element={
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              {/* /admin → Dashboard */}
+              <Route index element={<Navigate to="dashboard" replace />} />
+
+              {/* /admin/dashboard → mismo dashboard */}
+              <Route path="dashboard" element={<DashboardPage />} />
+
+              <Route path="pedidos" element={<PedidosPage />} />
+              <Route path="configuracion" element={<ConfiguracionPage />} />
+              <Route path="ingredientes" element={<IngredientesPage />} />
+              <Route path="pizzas" element={<PizzasPage />} />
+              <Route path="usuarios" element={<UsuariosPage />} />
+              <Route path="pedidos/:id" element={<PedidoDetallePage />} />
+            </Route>
+
+            {/* Redirección por defecto al dashboard */}
+            <Route path="*" element={<Navigate to="/admin" replace />} />
+          </Routes>
+          {isDemo && <DemoBanner />}
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
+  </React.StrictMode>
+);

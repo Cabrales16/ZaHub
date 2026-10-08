@@ -1,0 +1,4 @@
+# Jekyll descarta por defecto las carpetas que empiezan por "_", y Expo genera la app web
+# dentro de cliente/_expo/. Sin esto el sitio publicado perdería todo su JavaScript y CSS.
+include:
+  - _expo
