@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/banner.png" alt="ZaHub: app móvil para armar tu pizza y panel de administración" width="100%">
+
 <img src="landing/logo.png" alt="ZaHub" width="110">
 
 # 🍕 ZaHub
